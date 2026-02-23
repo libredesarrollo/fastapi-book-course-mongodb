@@ -1,13 +1,18 @@
 from fastapi import FastAPI, Depends, APIRouter, Query, Path
 # from sqlalchemy.orm import Session
 from contextlib import asynccontextmanager
+from bson import ObjectId
+from fastapi.encoders import ENCODERS_BY_TYPE
 
 # from task import task_router
 # from myupload import upload_router
+from mongo_task import mongo_task_router
 
 # from database.database import Base, engine, get_database_session
 # from database.models import Task
 from db_connection import ping_mongo_db_server
+
+ENCODERS_BY_TYPE[ObjectId] = str
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -30,11 +35,11 @@ def page(page: int = Query(1, ge=1, le=20, title='Esta es la pagina que quieres 
     return { "page": page,"size": size }
 
 @app.get("/e_phone/") # +34 111 12-34-56
-def phone(phone: str = Query(regex=r"^(\(?\+[\d]{1,3}\)?)\s?([\d]{1,5})\s?([\d][\s\.-]?){6,7}$", example="+34 111 12-34-56")):
+def phone(phone: str = Query(pattern=r"^(\(?\+[\d]{1,3}\)?)\s?([\d]{1,5})\s?([\d][\s\.-]?){6,7}$", examples=["+34 111 12-34-56"])):
     return {"phone": phone}
 
 @app.get("/ep_phone/{phone}") # +34 111 12-34-56
-def phone(phone: str = Path(regex=r"^(\(?\+[\d]{1,3}\)?)\s?([\d]{1,5})\s?([\d][\s\.-]?){6,7}$" , examples={
+def phone(phone: str = Path(pattern=r"^(\(?\+[\d]{1,3}\)?)\s?([\d]{1,5})\s?([\d][\s\.-]?){6,7}$" , examples={
     "normal": {
         "summary":"A normal example",
         "description":"A normal example",
@@ -55,3 +60,4 @@ def phone(phone: str = Path(regex=r"^(\(?\+[\d]{1,3}\)?)\s?([\d]{1,5})\s?([\d][\
 app.include_router(router)
 # app.include_router(task_router, prefix='/tasks')
 # app.include_router(upload_router, prefix='/upload')
+app.include_router(mongo_task_router, prefix="/mongo/tasks", tags=["Mongo Tasks"])

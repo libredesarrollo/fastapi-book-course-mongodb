@@ -36,27 +36,27 @@ class Task(BaseModel):
     # tags: set[str] = set()
 
     class Config:
-        orm_mode=True
-        schema_extra = {
-            "example": {
-                "id" : 123,
-                "name": "Salvar al mundo",
-                "description": "Hola Mundo Desc",
-                "status": StatusType.PENDING,
-                "tag":["tag 1", "tag 2"],
-                "category": {
-                    "id":1234,
-                    "name":"Cate 1"
-                },
-                "user": {
-                    "id":12,
-                    "name":"Andres",
-                    "email":"admin@admin.com",
-                    "surname":"Cruz",
-                    "website":"http://desarrollolibre.net",
-                }
-            }
-        }
+        from_attributes=True
+        # schema_extra = {
+        #     "example": {
+        #         "id" : 123,
+        #         "name": "Salvar al mundo",
+        #         "description": "Hola Mundo Desc",
+        #         "status": StatusType.PENDING,
+        #         "tag":["tag 1", "tag 2"],
+        #         "category": {
+        #             "id":1234,
+        #             "name":"Cate 1"
+        #         },
+        #         "user": {
+        #             "id":12,
+        #             "name":"Andres",
+        #             "email":"admin@admin.com",
+        #             "surname":"Cruz",
+        #             "website":"http://desarrollolibre.net",
+        #         }
+        #     }
+        # }
 
     @validator('name')
     def name_alphanumeric_and_whitespace(cls, v):
