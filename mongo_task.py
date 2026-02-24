@@ -16,7 +16,8 @@ async def add_task(
     """
     Crea una nueva tarea en la base de datos.
     """
-    task_dict = task.dict()
+    # task_dict = task.dict()
+    task_dict = task.model_dump()
     insert_result = await db.tasks.insert_one(task_dict)
     return {
         "message": "Tarea añadida correctamente",
@@ -66,7 +67,8 @@ async def update_task(
     if not ObjectId.is_valid(task_id):
         raise HTTPException(status_code=400, detail=f"ObjectId inválido: {task_id}")
 
-    update_data = task.dict(exclude_unset=True)
+    # update_data = task.dict(exclude_unset=True)
+    update_data = task.model_dump(exclude_none=True)
 
     if not update_data:
         raise HTTPException(status_code=400, detail="No se proporcionaron datos para actualizar")
