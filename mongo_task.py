@@ -3,7 +3,7 @@ from pymongo.database import Database
 from bson import ObjectId
 
 from mongo_db import get_mongo_database
-from schemes import TaskWrite
+from schemes import TaskWrite, TagsUpdate
 
 mongo_task_router = APIRouter()
 
@@ -17,7 +17,7 @@ async def add_task(
     Crea una nueva tarea en la base de datos.
     """
     # task_dict = task.dict()
-    task_dict = task.model_dump()
+    task_dict = task.model_dump(exclude_none=True)
     insert_result = await db.tasks.insert_one(task_dict)
     return {
         "message": "Tarea añadida correctamente",
@@ -83,6 +83,56 @@ async def update_task(
         return updated_task
     
     return {"message": "Los datos de la tarea eran los mismos, no se realizó ninguna actualización."}
+
+# ADD TAGS
+@mongo_task_router.put("/{task_id}/tags/add", summary="Añadir tags a una tarea")
+async def add_tags_to_task(
+    task_id: str = Path(..., description="El ID de la tarea a actualizar"),
+    tags_update: TagsUpdate = Body(..., example={"tags": ["new_tag_1", "new_tag_2"]}),
+    db: Database = Depends(get_mongo_database),
+):
+    """
+    Añade uno o más tags a una tarea existente.
+    Usa $addToSet para evitar duplicados en el array de tags.
+    """
+    if not ObjectId.is_valid(task_id):
+        raise HTTPException(status_code=400, detail=f"ObjectId inválido: {task_id}")
+
+    result = await db.tasks.update_one(
+        {"_id": ObjectId(task_id)},
+        {"$addToSet": {"tags": {"$each": tags_update.tags}}}
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Tarea con id {task_id} no encontrada")
+    
+    updated_task = await db.tasks.find_one({"_id": ObjectId(task_id)})
+    return updated_task
+
+# REMOVE TAGS
+@mongo_task_router.put("/{task_id}/tags/remove", summary="Eliminar tags de una tarea")
+async def remove_tags_from_task(
+    task_id: str = Path(..., description="El ID de la tarea a actualizar"),
+    tags_update: TagsUpdate = Body(..., example={"tags": ["tag_to_remove_1", "tag_to_remove_2"]}),
+    db: Database = Depends(get_mongo_database),
+):
+    """
+    Elimina uno o más tags de una tarea existente.
+    Usa $pull para remover las instancias de los tags especificados.
+    """
+    if not ObjectId.is_valid(task_id):
+        raise HTTPException(status_code=400, detail=f"ObjectId inválido: {task_id}")
+
+    result = await db.tasks.update_one(
+        {"_id": ObjectId(task_id)},
+        {"$pull": {"tags": {"$in": tags_update.tags}}}
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Tarea con id {task_id} no encontrada")
+    
+    updated_task = await db.tasks.find_one({"_id": ObjectId(task_id)})
+    return updated_task
 
 # DELETE
 @mongo_task_router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Eliminar una tarea")

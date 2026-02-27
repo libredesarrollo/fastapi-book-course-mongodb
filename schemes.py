@@ -28,12 +28,7 @@ class Task(BaseModel):
     status: StatusType
     # category: Category
     # user: User
-    # tags: List[str] = []
-
-    
-    category_id: int = Field(gt=0)
-    user_id: int = Field(gt=0)
-    # tags: set[str] = set()
+    tags: List[str] = []
 
     class Config:
         from_attributes=True
@@ -66,8 +61,10 @@ class Task(BaseModel):
         
 
 class TaskRead(Task):
-    id: int
+    id: str
 
 class TaskWrite(Task):
-    id: Optional[int] = Field(default=None)
-    user_id: Optional[int] = Field()
+    id: Optional[str] = Field(default=None)
+
+class TagsUpdate(BaseModel):
+    tags: List[str]
