@@ -26,7 +26,7 @@ class Task(BaseModel):
     name: str
     description: Optional[str] = Field("No description",min_length=5)
     status: StatusType
-    # category: Category
+    category: Optional[Category] = None
     # user: User
     tags: List[str] = []
 

@@ -3,7 +3,7 @@ from pymongo.database import Database
 from bson import ObjectId
 
 from mongo_db import get_mongo_database
-from schemes import TaskWrite, TagsUpdate
+from schemes import TaskWrite, TagsUpdate, Category
 
 mongo_task_router = APIRouter()
 
@@ -83,6 +83,30 @@ async def update_task(
         return updated_task
     
     return {"message": "Los datos de la tarea eran los mismos, no se realizó ninguna actualización."}
+
+# UPDATE CATEGORY
+@mongo_task_router.put("/{task_id}/category", summary="Actualizar categoría de una tarea")
+async def update_task_category(
+    task_id: str = Path(..., description="El ID de la tarea a actualizar"),
+    category: Category = Body(..., description="La nueva categoría"),
+    db: Database = Depends(get_mongo_database),
+):
+    """
+    Actualiza la categoría de una tarea.
+    """
+    if not ObjectId.is_valid(task_id):
+        raise HTTPException(status_code=400, detail=f"ObjectId inválido: {task_id}")
+
+    result = await db.tasks.update_one(
+        {"_id": ObjectId(task_id)},
+        {"$set": {"category": category.model_dump()}}
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Tarea con id {task_id} no encontrada")
+    
+    updated_task = await db.tasks.find_one({"_id": ObjectId(task_id)})
+    return updated_task
 
 # ADD TAGS
 @mongo_task_router.put("/{task_id}/tags/add", summary="Añadir tags a una tarea")
