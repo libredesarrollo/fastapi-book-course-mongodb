@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Optional, List
-from pydantic import BaseModel, validator, Field, EmailStr, HttpUrl
+from pydantic import BaseModel, Field, EmailStr
 
 class StatusType(str,Enum):
     DONE = "done"
@@ -53,11 +53,7 @@ class Task(BaseModel):
         #     }
         # }
 
-    @validator('name')
-    def name_alphanumeric_and_whitespace(cls, v):
-        if v.replace(" ", '').isalnum():
-            return v
-        raise ValueError('must be a alphanumeric')
+
         
 
 class TaskRead(Task):
